@@ -20,6 +20,7 @@ function formatDate(iso: string) {
 export default function FeedbacksPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [projectFilter, setProjectFilter] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -32,24 +33,37 @@ export default function FeedbacksPage() {
     })();
   }, []);
 
+  const availableProjectTypes = useMemo(() => {
+    if (!feedbacks) return [];
+    const present = new Set(feedbacks.map((fb) => fb.project_type));
+    return [
+      ...PROJECT_TYPES.filter((t) => present.has(t)),
+      ...Array.from(present).filter(
+        (t) => !PROJECT_TYPES.includes(t as (typeof PROJECT_TYPES)[number])
+      ),
+    ];
+  }, [feedbacks]);
+
   const groups = useMemo(() => {
     if (!feedbacks) return [];
     const byProject = new Map<string, Feedback[]>();
     for (const fb of feedbacks) {
+      if (projectFilter && fb.project_type !== projectFilter) continue;
       const list = byProject.get(fb.project_type) ?? [];
       list.push(fb);
       byProject.set(fb.project_type, list);
     }
-    // 정해진 프로젝트 유형 순서를 먼저, 그 외 값은 뒤에 붙입니다.
     const orderedTypes = [
       ...PROJECT_TYPES.filter((t) => byProject.has(t)),
-      ...Array.from(byProject.keys()).filter((t) => !PROJECT_TYPES.includes(t as (typeof PROJECT_TYPES)[number])),
+      ...Array.from(byProject.keys()).filter(
+        (t) => !PROJECT_TYPES.includes(t as (typeof PROJECT_TYPES)[number])
+      ),
     ];
     return orderedTypes.map((type) => ({
       type,
       items: byProject.get(type) ?? [],
     }));
-  }, [feedbacks]);
+  }, [feedbacks, projectFilter]);
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -63,6 +77,29 @@ export default function FeedbacksPage() {
 
       {error && (
         <Card className="border-red-100 bg-red-50 text-red-600 text-sm">{error}</Card>
+      )}
+
+      {availableProjectTypes.length > 0 && (
+        <Card>
+          <p className="text-sm font-semibold text-gray-900 mb-2">
+            프로젝트 이름으로 찾기
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <TagBadge
+              label="전체"
+              variant={projectFilter === null ? "selected" : "default"}
+              onClick={() => setProjectFilter(null)}
+            />
+            {availableProjectTypes.map((pt) => (
+              <TagBadge
+                key={pt}
+                label={pt}
+                variant={projectFilter === pt ? "selected" : "default"}
+                onClick={() => setProjectFilter(pt)}
+              />
+            ))}
+          </div>
+        </Card>
       )}
 
       {feedbacks === null && !error && (
@@ -84,6 +121,10 @@ export default function FeedbacksPage() {
             </Link>
           }
         />
+      )}
+
+      {feedbacks !== null && feedbacks.length > 0 && groups.length === 0 && (
+        <EmptyState message="선택한 프로젝트에 저장된 피드백이 없어요." />
       )}
 
       <div className="space-y-8">
@@ -111,7 +152,7 @@ export default function FeedbacksPage() {
                   {fb.is_shareable && (
                     <div className="mt-3 flex justify-end">
                       <Link href={`/cards/${fb.id}`}>
-                        <Button variant="share">공유 카드 만들기</Button>
+                        <Button variant="purple">공유 카드 만들기</Button>
                       </Link>
                     </div>
                   )}

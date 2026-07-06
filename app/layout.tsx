@@ -18,8 +18,8 @@ export default function RootLayout({
     <html lang="ko">
       <body className="min-h-screen bg-gray-50 antialiased">
         <Header />
-        <main className="max-w-5xl mx-auto px-4 pb-24 pt-6">{children}</main>
         <Nav />
+        <main className="max-w-5xl mx-auto px-6 sm:px-10 pb-10 pt-8">{children}</main>
       </body>
     </html>
   );
