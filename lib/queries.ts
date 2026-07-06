@@ -67,6 +67,34 @@ export async function getDistinctTagsByUser(
   return { data: unique, error: null };
 }
 
+export async function updateFeedback(
+  id: string,
+  patch: Partial<{
+    project_type: string;
+    feedback_source: string;
+    original_feedback: string;
+    tag: string;
+    is_shareable: boolean;
+  }>
+): Promise<QueryResult<Feedback>> {
+  const { data, error } = await supabase
+    .from("feedbacks")
+    .update(patch)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: data as Feedback, error: null };
+}
+
+export async function deleteFeedback(id: string): Promise<QueryResult<null>> {
+  const { error } = await supabase.from("feedbacks").delete().eq("id", id);
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: null, error: null };
+}
+
 export async function getFeedbackById(
   id: string
 ): Promise<QueryResult<Feedback>> {

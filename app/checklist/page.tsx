@@ -1,18 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import ProgressBar from "@/components/ui/ProgressBar";
 import Skeleton from "@/components/ui/Skeleton";
-import Toast from "@/components/ui/Toast";
 import { CHECKLIST_MAP, REPEAT_THRESHOLD } from "@/lib/constants";
 import {
   computeTagCounts,
   getChecklistStatus,
   getFeedbacksByUser,
-  resetChecklist,
   upsertChecklistItem,
 } from "@/lib/queries";
 import { Tag as TagType } from "@/lib/types";
@@ -28,7 +25,6 @@ interface ChecklistItem {
 export default function ChecklistPage() {
   const [items, setItems] = useState<ChecklistItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState(false);
   const userId = useMemo(() => getUserId(), []);
 
   async function load() {
@@ -75,17 +71,6 @@ export default function ChecklistPage() {
     }
   }
 
-  async function handleReset() {
-    if (!items) return;
-    const { error } = await resetChecklist(userId);
-    if (error) {
-      setError(error);
-      return;
-    }
-    setItems(items.map((i) => ({ ...i, checked: false })));
-    setToast(true);
-  }
-
   const total = items?.length ?? 0;
   const done = items?.filter((i) => i.checked).length ?? 0;
   const percent = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -121,17 +106,9 @@ export default function ChecklistPage() {
       {items !== null && items.length > 0 && (
         <>
           <Card>
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-semibold text-gray-900">
-                진행률 {done} / {total}
-              </p>
-              <button
-                onClick={handleReset}
-                className="text-xs text-indigo-600 font-semibold hover:underline"
-              >
-                체크리스트 초기화
-              </button>
-            </div>
+            <p className="text-sm font-semibold text-gray-900 mb-2">
+              진행률 {done} / {total}
+            </p>
             <ProgressBar percent={percent} variant={allDone ? "emerald" : "indigo"} />
           </Card>
 
@@ -160,14 +137,8 @@ export default function ChecklistPage() {
               </div>
             ))}
           </div>
-
-          <Button variant="secondary" className="w-full" onClick={handleReset}>
-            새 프로젝트 시작 (체크리스트 초기화)
-          </Button>
         </>
       )}
-
-      <Toast message="체크리스트가 초기화되었어요." show={toast} onClose={() => setToast(false)} />
     </div>
   );
 }

@@ -19,6 +19,7 @@ export default function LibraryPage() {
   const [error, setError] = useState<string | null>(null);
   const [projectType, setProjectType] = useState<string | null>(null);
   const [tag, setTag] = useState<string | null>(null);
+  const [freqCards, setFreqCards] = useState<SharedCard[] | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,7 +35,21 @@ export default function LibraryPage() {
     })();
   }, [projectType, tag]);
 
-  const tagFrequency = useMemo(() => (cards ? computeSharedTagFrequency(cards) : []), [cards]);
+  // 자주 반복되는 태그는 프로젝트 유형 필터만 반영하고,
+  // 역량 태그 필터와는 무관하게 계산합니다.
+  useEffect(() => {
+    (async () => {
+      const { data } = await getSharedCards({
+        projectType: projectType ?? undefined,
+      });
+      setFreqCards(data ?? []);
+    })();
+  }, [projectType]);
+
+  const tagFrequency = useMemo(
+    () => (freqCards ? computeSharedTagFrequency(freqCards) : []),
+    [freqCards]
+  );
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -88,7 +103,9 @@ export default function LibraryPage() {
       {tagFrequency.length > 0 && (
         <Card variant="repeat">
           <p className="text-sm font-semibold text-emerald-700 mb-2">
-            공유 라이브러리에서 자주 반복되는 태그
+            {projectType
+              ? `${projectType}에서 자주 반복되는 태그`
+              : "공유 라이브러리에서 자주 반복되는 태그"}
           </p>
           <div className="flex flex-wrap gap-2">
             {tagFrequency.map((tf) => (
@@ -121,13 +138,9 @@ export default function LibraryPage() {
                 {formatDate(card.created_at)}
               </span>
             </div>
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap mb-3">
+            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
               {card.generalized_feedback}
             </p>
-            <div className="bg-indigo-50 rounded-xl p-3">
-              <p className="text-xs font-semibold text-indigo-700 mb-1">다음 프로젝트에서 조심할 점</p>
-              <p className="text-xs text-gray-600 leading-relaxed">{card.action_item}</p>
-            </div>
           </Card>
         ))}
       </div>

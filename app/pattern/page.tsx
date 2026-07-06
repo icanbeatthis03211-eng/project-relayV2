@@ -65,8 +65,8 @@ export default function PatternPage() {
       )}
 
       {topTag && (
-        <Card variant={topTag.count >= REPEAT_THRESHOLD ? "repeat" : "highlight"} className="text-center">
-          <p className="text-xs font-semibold text-emerald-700 mb-1">가장 많이 반복된 영역</p>
+        <Card variant="highlight" className="text-center">
+          <p className="text-xs font-semibold text-indigo-700 mb-1">가장 많이 반복된 영역</p>
           <p className="text-2xl font-bold text-gray-900">{topTag.tag}</p>
           <p className="text-sm text-gray-600 mt-2">{interpretationLine(topTag.tag, topTag.count)}</p>
         </Card>
