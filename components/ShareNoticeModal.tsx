@@ -28,8 +28,8 @@ export default function ShareNoticeModal() {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-xl p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-white">
+      <div className="relative w-full max-w-md bg-white rounded-2xl border border-gray-100 shadow-xl p-6">
         <button
           onClick={handleClose}
           aria-label="닫기"
