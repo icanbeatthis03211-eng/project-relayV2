@@ -1,13 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Tag from "@/components/ui/Tag";
 import Toast from "@/components/ui/Toast";
 import { FEEDBACK_SOURCES, PROJECT_TYPES, TAGS } from "@/lib/constants";
-import { createFeedback } from "@/lib/queries";
+import { createFeedback, getDistinctTagsByUser } from "@/lib/queries";
 import { getUserId } from "@/lib/user";
 
 export default function NewFeedbackPage() {
@@ -15,18 +15,44 @@ export default function NewFeedbackPage() {
   const [projectType, setProjectType] = useState(PROJECT_TYPES[0]);
   const [source, setSource] = useState(FEEDBACK_SOURCES[0]);
   const [tags, setTags] = useState<string[]>([]);
+  const [customTags, setCustomTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState("");
   const [content, setContent] = useState("");
   const [isShareable, setIsShareable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
 
+  // 이전에 직접 추가했던 커스텀 태그를 불러와 다시 고를 수 있게 해줍니다.
+  useEffect(() => {
+    (async () => {
+      const { data } = await getDistinctTagsByUser(getUserId());
+      if (!data) return;
+      const predefined = new Set<string>(TAGS);
+      const history = data.filter((t) => !predefined.has(t));
+      if (history.length > 0) {
+        setCustomTags((prev) => Array.from(new Set([...prev, ...history])));
+      }
+    })();
+  }, []);
+
+  const allTagOptions = Array.from(new Set<string>([...TAGS, ...customTags]));
   const canSubmit = tags.length > 0 && content.trim().length > 0 && !submitting;
 
   function toggleTag(t: string) {
     setTags((prev) =>
       prev.includes(t) ? prev.filter((v) => v !== t) : [...prev, t]
     );
+  }
+
+  function handleAddCustomTag() {
+    const value = newTagInput.trim();
+    if (!value) return;
+    if (!allTagOptions.includes(value)) {
+      setCustomTags((prev) => [...prev, value]);
+    }
+    setTags((prev) => (prev.includes(value) ? prev : [...prev, value]));
+    setNewTagInput("");
   }
 
   async function handleSubmit() {
@@ -102,10 +128,11 @@ export default function NewFeedbackPage() {
           역량 태그 (여러 개 선택 가능)
         </p>
         <p className="text-xs text-gray-400 mb-3">
-          이 피드백과 관련된 역량을 모두 골라주세요.
+          이 피드백과 관련된 역량을 모두 골라주세요. 목록에 없다면 직접
+          추가할 수 있어요.
         </p>
         <div className="flex flex-wrap gap-2">
-          {TAGS.map((t) => (
+          {allTagOptions.map((t) => (
             <Tag
               key={t}
               label={t}
@@ -113,6 +140,30 @@ export default function NewFeedbackPage() {
               onClick={() => toggleTag(t)}
             />
           ))}
+        </div>
+
+        <div className="flex gap-2 mt-4">
+          <input
+            type="text"
+            value={newTagInput}
+            onChange={(e) => setNewTagInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleAddCustomTag();
+              }
+            }}
+            placeholder="원하는 태그가 없다면 직접 입력해보세요"
+            className="flex-1 rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
+          <button
+            type="button"
+            onClick={handleAddCustomTag}
+            disabled={!newTagInput.trim()}
+            className="shrink-0 rounded-xl px-4 py-2.5 text-sm font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-all disabled:bg-gray-100 disabled:text-gray-400"
+          >
+            태그 추가
+          </button>
         </div>
       </Card>
 

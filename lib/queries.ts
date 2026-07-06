@@ -46,6 +46,27 @@ export async function getFeedbacksByUser(
   return { data: (data as Feedback[]) ?? [], error: null };
 }
 
+/**
+ * 사용자가 지금까지 저장한 피드백에서 사용된 모든 태그(중복 제거)를
+ * 가져옵니다. 미리 정의된 태그 목록에 없는, 사용자가 직접 추가한
+ * 커스텀 태그를 다음 피드백 저장 화면에서도 다시 보여주기 위해 사용해요.
+ */
+export async function getDistinctTagsByUser(
+  userId: string
+): Promise<QueryResult<string[]>> {
+  const { data, error } = await supabase
+    .from("feedbacks")
+    .select("tag")
+    .eq("user_id", userId);
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+
+  const unique = Array.from(
+    new Set((data as { tag: string }[]).map((row) => row.tag))
+  );
+  return { data: unique, error: null };
+}
+
 export async function getFeedbackById(
   id: string
 ): Promise<QueryResult<Feedback>> {
