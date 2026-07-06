@@ -1,13 +1,13 @@
 import { FeedbackSource, ProjectType, Tag } from "./types";
 
 export const PROJECT_TYPES: ProjectType[] = [
+  "서비스 기획 입문",
+  "서비스 기획 숙련",
+  "서비스 기획 심화",
   "역기획 프로젝트",
   "데이터 드리븐 프로젝트",
   "MVP 프로젝트",
   "최종 프로젝트",
-  "서비스 기획 입문",
-  "서비스 기획 숙련",
-  "서비스 기획 심화",
 ];
 
 export const FEEDBACK_SOURCES: FeedbackSource[] = [

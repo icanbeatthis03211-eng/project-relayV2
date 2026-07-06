@@ -7,6 +7,7 @@ import Card from "@/components/ui/Card";
 import Skeleton from "@/components/ui/Skeleton";
 import TagBadge from "@/components/ui/Tag";
 import Toast from "@/components/ui/Toast";
+import ShareNoticeModal from "@/components/ShareNoticeModal";
 import { CHECKLIST_MAP } from "@/lib/constants";
 import { createSharedCard, getFeedbackById } from "@/lib/queries";
 import { Feedback, Tag as TagType } from "@/lib/types";
@@ -78,6 +79,8 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
 
   return (
     <div className="space-y-6 animate-fadeIn">
+      <ShareNoticeModal />
+
       <div>
         <h1 className="text-3xl font-bold text-gray-900">공유 카드 만들기</h1>
         <p className="text-sm text-gray-600 mt-1 leading-relaxed">
