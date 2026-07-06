@@ -105,7 +105,7 @@ export default function LibraryPage() {
           <p className="text-sm font-semibold text-emerald-700 mb-2">
             {projectType
               ? `${projectType}에서 자주 반복되는 태그`
-              : "공유 라이브러리에서 자주 반복되는 태그"}
+              : "전체에서 자주 반복되는 태그"}
           </p>
           <div className="flex flex-wrap gap-2">
             {tagFrequency.map((tf) => (

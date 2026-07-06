@@ -8,7 +8,13 @@ import Skeleton from "@/components/ui/Skeleton";
 import TagBadge from "@/components/ui/Tag";
 import Button from "@/components/ui/Button";
 import { Feedback } from "@/lib/types";
-import { deleteFeedback, getFeedbacksByUser, updateFeedback } from "@/lib/queries";
+import {
+  deleteFeedback,
+  deleteSharedCard,
+  getFeedbacksByUser,
+  getSharedCardsByFeedbackIds,
+  updateFeedback,
+} from "@/lib/queries";
 import { getUserId } from "@/lib/user";
 import { PROJECT_TYPES, TAGS } from "@/lib/constants";
 
@@ -32,6 +38,8 @@ export default function FeedbacksPage() {
   const [savingId, setSavingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [rowError, setRowError] = useState<string | null>(null);
+  const [sharedMap, setSharedMap] = useState<Map<string, string>>(new Map());
+  const [unsharingId, setUnsharingId] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -40,7 +48,18 @@ export default function FeedbacksPage() {
         setError(error);
         return;
       }
-      setFeedbacks(data ?? []);
+      const list = data ?? [];
+      setFeedbacks(list);
+
+      const shareableIds = list.filter((f) => f.is_shareable).map((f) => f.id);
+      const { data: sharedCards } = await getSharedCardsByFeedbackIds(shareableIds);
+      if (sharedCards) {
+        const map = new Map<string, string>();
+        for (const card of sharedCards) {
+          if (card.feedback_id) map.set(card.feedback_id, card.id);
+        }
+        setSharedMap(map);
+      }
     })();
   }, []);
 
@@ -123,6 +142,25 @@ export default function FeedbacksPage() {
       return;
     }
     setFeedbacks((prev) => (prev ? prev.filter((f) => f.id !== fb.id) : prev));
+  }
+
+  async function handleUnshare(fb: Feedback) {
+    const sharedCardId = sharedMap.get(fb.id);
+    if (!sharedCardId) return;
+    if (!window.confirm("공유를 취소할까요? 라이브러리에서 삭제돼요.")) return;
+    setUnsharingId(fb.id);
+    setRowError(null);
+    const { error } = await deleteSharedCard(sharedCardId);
+    setUnsharingId(null);
+    if (error) {
+      setRowError(error);
+      return;
+    }
+    setSharedMap((prev) => {
+      const next = new Map(prev);
+      next.delete(fb.id);
+      return next;
+    });
   }
 
   const tagOptionsFor = (fb: Feedback) =>
@@ -282,9 +320,24 @@ export default function FeedbacksPage() {
                             </button>
                           </div>
                           {fb.is_shareable && (
-                            <Link href={`/cards/${fb.id}`}>
-                              <Button variant="purple">공유하기</Button>
-                            </Link>
+                            sharedMap.has(fb.id) ? (
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-emerald-600">
+                                  공유했어요
+                                </span>
+                                <button
+                                  onClick={() => handleUnshare(fb)}
+                                  disabled={unsharingId === fb.id}
+                                  className="text-xs text-gray-500 font-semibold hover:text-red-600 disabled:opacity-50"
+                                >
+                                  {unsharingId === fb.id ? "취소 중..." : "공유 취소"}
+                                </button>
+                              </div>
+                            ) : (
+                              <Link href={`/cards/${fb.id}`}>
+                                <Button variant="purple">공유하기</Button>
+                              </Link>
+                            )
                           )}
                         </div>
                       </>

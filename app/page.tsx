@@ -59,6 +59,8 @@ export default function HomePage() {
         <p className="text-sm text-gray-600 leading-relaxed mt-3 max-w-md mx-auto">
           튜터, 팀원, 발표 피드백과 회고를 저장하면 Project Relay가 반복되는
           패턴을 찾아 다음 프로젝트 전에 무엇을 점검해야 하는지 알려줍니다.
+          민감한 내용은 지우고 익명 카드로 다른 수강생들과 공유할 수도
+          있어요.
         </p>
         <div className="mt-6">
           <Link href="/feedback/new">
@@ -94,7 +96,7 @@ export default function HomePage() {
             { step: "1", title: "피드백 저장", desc: "받은 피드백을 짧게 기록해요" },
             { step: "2", title: "반복 피드백 감지", desc: "같은 태그가 2회 이상 모이면 반복으로 표시" },
             { step: "3", title: "체크리스트 생성", desc: "반복 태그 기반으로 다음 프로젝트 점검 항목 생성" },
-            { step: "4", title: "공유 카드 생성", desc: "민감정보를 지운 학습 카드로 라이브러리에 공유" },
+            { step: "4", title: "공유하기", desc: "민감정보를 지운 학습 카드로 라이브러리에 공유" },
           ].map((s) => (
             <Card key={s.step} variant="highlight" className="text-left">
               <p className="text-xs font-bold text-indigo-600 mb-1">STEP {s.step}</p>

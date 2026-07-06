@@ -31,22 +31,12 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
       }
       setFeedback(data);
       setGeneralizedFeedback(data.original_feedback);
+      // 화면에는 보이지 않지만, 태그 기반 체크 문구를 조심할 점으로 함께 저장해요.
       setActionItem(
         CHECKLIST_MAP[data.tag as TagType]?.question ?? "다음 프로젝트에서 함께 점검해보세요."
       );
     })();
   }, [feedbackId]);
-
-  async function handleCopy() {
-    if (!feedback) return;
-    const text = `[${feedback.project_type}] ${feedback.tag}\n\n${generalizedFeedback}\n\n다음에 조심할 점: ${actionItem}`;
-    try {
-      await navigator.clipboard.writeText(text);
-      setToast("카드 내용이 복사되었어요!");
-    } catch {
-      setToast("복사에 실패했어요. 브라우저 권한을 확인해주세요.");
-    }
-  }
 
   async function handleAddToLibrary() {
     if (!feedback) return;
@@ -65,8 +55,8 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
       return;
     }
     setAdded(true);
-    setToast("공유 라이브러리에 추가되었어요!");
-    setTimeout(() => router.push("/library"), 900);
+    setToast("공유했어요!");
+    setTimeout(() => router.push("/feedbacks"), 900);
   }
 
   if (loadError) {
@@ -109,36 +99,20 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
             onChange={(e) => setGeneralizedFeedback(e.target.value)}
           />
         </div>
-
-        <div>
-          <p className="text-sm font-semibold text-gray-900 mb-2">
-            다음 프로젝트에서 조심할 점
-          </p>
-          <textarea
-            className="w-full min-h-[80px] rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-            value={actionItem}
-            onChange={(e) => setActionItem(e.target.value)}
-          />
-        </div>
       </Card>
 
       {submitError && (
         <Card className="border-red-100 bg-red-50 text-red-600 text-sm">{submitError}</Card>
       )}
 
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button variant="secondary" className="flex-1" onClick={handleCopy}>
-          카드 복사하기
-        </Button>
-        <Button
-          variant="share"
-          className="flex-1"
-          disabled={submitting || added}
-          onClick={handleAddToLibrary}
-        >
-          {added ? "추가 완료" : submitting ? "추가 중..." : "공유 라이브러리에 추가"}
-        </Button>
-      </div>
+      <Button
+        variant="share"
+        className="w-full"
+        disabled={submitting || added}
+        onClick={handleAddToLibrary}
+      >
+        {added ? "공유 완료" : submitting ? "공유 중..." : "공유하기"}
+      </Button>
 
       <Toast message={toast ?? ""} show={!!toast} onClose={() => setToast(null)} />
     </div>

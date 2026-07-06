@@ -214,6 +214,31 @@ export async function getSharedCards(filters?: {
   return { data: (data as SharedCard[]) ?? [], error: null };
 }
 
+/**
+ * 주어진 feedback id 목록 중 이미 공유 카드로 등록된 것을 찾아옵니다.
+ * "내가 저장한 피드백" 화면에서 이미 공유한 피드백을 표시하는 데 사용해요.
+ */
+export async function getSharedCardsByFeedbackIds(
+  feedbackIds: string[]
+): Promise<QueryResult<SharedCard[]>> {
+  if (feedbackIds.length === 0) return { data: [], error: null };
+
+  const { data, error } = await supabase
+    .from("shared_cards")
+    .select("*")
+    .in("feedback_id", feedbackIds);
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: (data as SharedCard[]) ?? [], error: null };
+}
+
+export async function deleteSharedCard(id: string): Promise<QueryResult<null>> {
+  const { error } = await supabase.from("shared_cards").delete().eq("id", id);
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: null, error: null };
+}
+
 export function computeSharedTagFrequency(cards: SharedCard[]): TagCount[] {
   const counts = new Map<string, number>();
   for (const card of cards) {
