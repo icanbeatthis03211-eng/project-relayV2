@@ -16,7 +16,8 @@ export type Tag =
   | "데이터 해석"
   | "사용자 관점"
   | "발표 흐름"
-  | "장표 표현";
+  | "장표 표현"
+  | "기타";
 
 export interface Feedback {
   id: string;

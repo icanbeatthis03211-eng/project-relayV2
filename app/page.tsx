@@ -6,12 +6,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Skeleton from "@/components/ui/Skeleton";
 import { getUserId } from "@/lib/user";
-import {
-  computeTagCounts,
-  getFeedbacksByUser,
-  getParticipantCount,
-  subscribeToFeedbackInserts,
-} from "@/lib/queries";
+import { computeTagCounts, getFeedbacksByUser } from "@/lib/queries";
 import { REPEAT_THRESHOLD } from "@/lib/constants";
 
 interface Stats {
@@ -24,10 +19,6 @@ interface Stats {
 export default function HomePage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [participantCount, setParticipantCount] = useState<number | null>(
-    null
-  );
-  const [isLive, setIsLive] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -47,32 +38,6 @@ export default function HomePage() {
         shareableCount: feedbacks.filter((f) => f.is_shareable).length,
       });
     })();
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function refreshParticipantCount() {
-      const { data } = await getParticipantCount();
-      if (!cancelled && data !== null) {
-        setParticipantCount(data);
-      }
-    }
-
-    refreshParticipantCount();
-
-    // feedbacks 테이블에 새 데이터가 적재될 때마다(다른 사용자 포함)
-    // 누적 참여자 수를 실시간으로 다시 집계합니다.
-    const unsubscribe = subscribeToFeedbackInserts(() => {
-      setIsLive(true);
-      refreshParticipantCount();
-      setTimeout(() => setIsLive(false), 1200);
-    });
-
-    return () => {
-      cancelled = true;
-      unsubscribe();
-    };
   }, []);
 
   const metricCards = [
@@ -105,40 +70,6 @@ export default function HomePage() {
       {error && (
         <Card className="border-red-100 bg-red-50 text-red-600 text-sm">{error}</Card>
       )}
-
-      <section>
-        <Card variant="repeat" className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <span
-                className={`w-2 h-2 rounded-full bg-emerald-500 ${
-                  isLive ? "animate-ping" : "animate-pulse"
-                }`}
-              />
-              <p className="text-xs font-semibold text-emerald-700">
-                실시간 · 누적 참여자 수
-              </p>
-            </div>
-            <p className="text-3xl font-bold text-emerald-700 mt-1">
-              {participantCount === null ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  {participantCount.toLocaleString()}
-                  <span className="text-sm text-emerald-600 font-normal ml-1">
-                    명
-                  </span>
-                </>
-              )}
-            </p>
-          </div>
-          <p className="text-xs text-emerald-700 text-right leading-relaxed max-w-[9rem]">
-            피드백을 저장한 모든 수강생 수가
-            <br />
-            새로 기록될 때마다 자동 갱신돼요
-          </p>
-        </Card>
-      </section>
 
       <section className="grid grid-cols-2 gap-3">
         {metricCards.map((card) => (

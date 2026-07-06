@@ -25,6 +25,7 @@ export const TAGS: Tag[] = [
   "사용자 관점",
   "발표 흐름",
   "장표 표현",
+  "기타",
 ];
 
 export interface ChecklistMapItem {
@@ -72,6 +73,10 @@ export const CHECKLIST_MAP: Record<Tag, ChecklistMapItem> = {
   "장표 표현": {
     question: "핵심 메시지가 장표에서 한눈에 보이는가?",
     description: "장표에서 메시지 전달력에 대한 지적이 반복되고 있어요.",
+  },
+  기타: {
+    question: "다른 태그로 분류되지 않은 피드백을 다시 한번 정리해봤는가?",
+    description: "정해진 태그에 속하지 않는 피드백이 반복되고 있어요.",
   },
 };
 

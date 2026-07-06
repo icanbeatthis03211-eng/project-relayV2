@@ -47,14 +47,6 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_...";
 `.env.local` 파일은 더 이상 사용되지 않으며(내용도 비워둠), 삭제해도 앱
 동작에는 영향이 없습니다.
 
-## 실시간 누적 참여자 수
-
-메인 대시보드 상단에는 `feedbacks` 테이블에 한 번이라도 기록을 남긴
-서로 다른 사용자 수를 "누적 참여자 수"로 보여줍니다. Supabase Realtime의
-`postgres_changes` 구독(`lib/queries.ts`의 `subscribeToFeedbackInserts`)을
-통해, 누군가 새 피드백을 저장할 때마다 다른 사용자의 화면에서도 숫자가
-자동으로 다시 계산되어 갱신됩니다.
-
 ## Supabase 스키마 적용 방법 (필수, 수동 작업)
 
 이 프로젝트는 Supabase 대시보드에 직접 접속할 수 없으므로, 아래 절차를
@@ -67,9 +59,6 @@ const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_...";
    전체 복사하여 붙여넣고 실행(Run)합니다.
 4. `feedbacks`, `checklist_status`, `shared_cards` 세 개의 테이블과 RLS
    정책이 생성되었는지 **Table Editor** 에서 확인합니다.
-5. **Database → Replication** 메뉴에서 `feedbacks` 테이블이
-   `supabase_realtime` publication에 포함되어 있는지 확인합니다
-   (schema.sql이 자동으로 등록하지만, 대시보드에서 재확인을 권장합니다).
 
 이 앱은 정식 로그인 기능이 없으므로, RLS는 anon/publishable key로 누구나
 자유롭게 CRUD 할 수 있도록 permissive 정책(`using (true)`,
@@ -89,11 +78,11 @@ app/
   library/page.tsx          # 공유 피드백 라이브러리
   layout.tsx, globals.css
 components/
-  Header.tsx, Nav.tsx, CardEditor.tsx
+  Header.tsx, Nav.tsx, Logo.tsx, CardEditor.tsx
   ui/                       # Button, Card, Tag, EmptyState, Spinner, Skeleton, ProgressBar, Toast
 lib/
   supabase/client.ts        # 브라우저용 Supabase client (자격증명 하드코딩)
-  queries.ts                # 모든 CRUD 쿼리 함수 + 실시간 참여자 수 구독
+  queries.ts                # 모든 CRUD 쿼리 함수 모음
   constants.ts               # PROJECT_TYPES, FEEDBACK_SOURCES, TAGS, CHECKLIST_MAP
   types.ts                   # Feedback, SharedCard, ChecklistStatus 타입
   user.ts                    # localStorage 기반 익명 user_id 유틸

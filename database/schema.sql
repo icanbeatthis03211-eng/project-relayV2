@@ -6,8 +6,6 @@
 --   1) feedbacks         : 사용자가 저장한 원본 피드백
 --   2) checklist_status  : 태그별 체크리스트 완료 상태
 --   3) shared_cards      : 익명 공유 카드 (학습 라이브러리)
---   4) feedbacks 테이블에 대한 Realtime publication 등록
---      (메인 화면의 "누적 참여자 수" 실시간 갱신에 사용)
 
 create extension if not exists "pgcrypto";
 
@@ -107,20 +105,3 @@ create policy "shared_cards_update_all" on public.shared_cards
 drop policy if exists "shared_cards_delete_all" on public.shared_cards;
 create policy "shared_cards_delete_all" on public.shared_cards
   for delete using (true);
-
--- ---------- 4) Realtime: feedbacks INSERT 이벤트 브로드캐스트 ----------
--- 메인 대시보드가 새 피드백이 저장될 때마다 "누적 참여자 수"를
--- 실시간으로 다시 계산할 수 있도록 publication에 테이블을 등록합니다.
--- 이미 등록되어 있으면 건너뜁니다 (재실행 안전).
-do $$
-begin
-  if not exists (
-    select 1
-    from pg_publication_tables
-    where pubname = 'supabase_realtime'
-      and schemaname = 'public'
-      and tablename = 'feedbacks'
-  ) then
-    alter publication supabase_realtime add table public.feedbacks;
-  end if;
-end $$;

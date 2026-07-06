@@ -14,34 +14,48 @@ export default function NewFeedbackPage() {
   const router = useRouter();
   const [projectType, setProjectType] = useState(PROJECT_TYPES[0]);
   const [source, setSource] = useState(FEEDBACK_SOURCES[0]);
-  const [tag, setTag] = useState<string | null>(null);
+  const [tags, setTags] = useState<string[]>([]);
   const [content, setContent] = useState("");
   const [isShareable, setIsShareable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
 
-  const canSubmit = tag !== null && content.trim().length > 0 && !submitting;
+  const canSubmit = tags.length > 0 && content.trim().length > 0 && !submitting;
+
+  function toggleTag(t: string) {
+    setTags((prev) =>
+      prev.includes(t) ? prev.filter((v) => v !== t) : [...prev, t]
+    );
+  }
 
   async function handleSubmit() {
-    if (!tag) return;
+    if (tags.length === 0) return;
     setSubmitting(true);
     setError(null);
     const userId = getUserId();
-    const { error } = await createFeedback({
-      user_id: userId,
-      project_type: projectType,
-      feedback_source: source,
-      original_feedback: content.trim(),
-      tag,
-      is_shareable: isShareable,
-    });
-    setSubmitting(false);
+    const trimmed = content.trim();
 
-    if (error) {
-      setError(error);
-      return;
+    // 선택한 역량 태그마다 하나의 피드백 기록을 저장합니다.
+    // (같은 원본 피드백이 여러 역량과 관련 있을 수 있기 때문에,
+    //  태그별 반복 감지 로직이 정확히 동작하도록 태그당 한 행씩 남깁니다.)
+    for (const t of tags) {
+      const { error } = await createFeedback({
+        user_id: userId,
+        project_type: projectType,
+        feedback_source: source,
+        original_feedback: trimmed,
+        tag: t,
+        is_shareable: isShareable,
+      });
+      if (error) {
+        setSubmitting(false);
+        setError(error);
+        return;
+      }
     }
+
+    setSubmitting(false);
     setToast(true);
     setTimeout(() => router.push("/feedbacks"), 700);
   }
@@ -84,14 +98,19 @@ export default function NewFeedbackPage() {
       </Card>
 
       <Card>
-        <p className="text-lg font-semibold text-gray-900 mb-3">역량 태그 (1개 선택)</p>
+        <p className="text-lg font-semibold text-gray-900 mb-1">
+          역량 태그 (여러 개 선택 가능)
+        </p>
+        <p className="text-xs text-gray-400 mb-3">
+          이 피드백과 관련된 역량을 모두 골라주세요.
+        </p>
         <div className="flex flex-wrap gap-2">
           {TAGS.map((t) => (
             <Tag
               key={t}
               label={t}
-              variant={tag === t ? "selected" : "default"}
-              onClick={() => setTag(t)}
+              variant={tags.includes(t) ? "selected" : "default"}
+              onClick={() => toggleTag(t)}
             />
           ))}
         </div>
