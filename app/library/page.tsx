@@ -6,8 +6,14 @@ import EmptyState from "@/components/ui/EmptyState";
 import Skeleton from "@/components/ui/Skeleton";
 import TagBadge from "@/components/ui/Tag";
 import { PROJECT_TYPES, TAGS } from "@/lib/constants";
-import { computeSharedTagFrequency, getSharedCards } from "@/lib/queries";
+import {
+  computeSharedTagFrequency,
+  deleteSharedCard,
+  getFeedbacksByUser,
+  getSharedCards,
+} from "@/lib/queries";
 import { SharedCard } from "@/lib/types";
+import { getUserId } from "@/lib/user";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -20,6 +26,17 @@ export default function LibraryPage() {
   const [projectType, setProjectType] = useState<string | null>(null);
   const [tag, setTag] = useState<string | null>(null);
   const [freqCards, setFreqCards] = useState<SharedCard[] | null>(null);
+  const [myFeedbackIds, setMyFeedbackIds] = useState<Set<string>>(new Set());
+  const [unsharingId, setUnsharingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await getFeedbacksByUser(getUserId());
+      if (data) {
+        setMyFeedbackIds(new Set(data.map((fb) => fb.id)));
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -50,6 +67,18 @@ export default function LibraryPage() {
     () => (freqCards ? computeSharedTagFrequency(freqCards) : []),
     [freqCards]
   );
+
+  async function handleUnshare(card: SharedCard) {
+    if (!window.confirm("공유를 취소할까요? 라이브러리에서 삭제돼요.")) return;
+    setUnsharingId(card.id);
+    const { error } = await deleteSharedCard(card.id);
+    setUnsharingId(null);
+    if (error) {
+      setError(error);
+      return;
+    }
+    setCards((prev) => (prev ? prev.filter((c) => c.id !== card.id) : prev));
+  }
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -127,22 +156,36 @@ export default function LibraryPage() {
       )}
 
       <div className="space-y-3">
-        {cards?.map((card) => (
-          <Card key={card.id} variant="share" hoverable>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex flex-wrap gap-2">
-                <TagBadge label={card.project_type} variant="default" />
-                <TagBadge label={card.tag} variant="selected" />
+        {cards?.map((card) => {
+          const isMine = !!card.feedback_id && myFeedbackIds.has(card.feedback_id);
+          return (
+            <Card key={card.id} variant="share" hoverable>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-wrap gap-2">
+                  <TagBadge label={card.project_type} variant="default" />
+                  <TagBadge label={card.tag} variant="selected" />
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {formatDate(card.created_at)}
+                  </span>
+                  {isMine && (
+                    <button
+                      onClick={() => handleUnshare(card)}
+                      disabled={unsharingId === card.id}
+                      className="text-xs text-gray-400 font-semibold hover:text-red-600 disabled:opacity-50"
+                    >
+                      {unsharingId === card.id ? "취소 중..." : "공유 취소"}
+                    </button>
+                  )}
+                </div>
               </div>
-              <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
-                {formatDate(card.created_at)}
-              </span>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-              {card.generalized_feedback}
-            </p>
-          </Card>
-        ))}
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {card.generalized_feedback}
+              </p>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

@@ -94,7 +94,7 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
         <div>
           <p className="text-sm font-semibold text-gray-900 mb-2">일반화된 피드백 요약</p>
           <textarea
-            className="w-full min-h-[140px] rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+            className="w-full min-h-[320px] rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
             value={generalizedFeedback}
             onChange={(e) => setGeneralizedFeedback(e.target.value)}
           />
@@ -106,7 +106,7 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
       )}
 
       <Button
-        variant="share"
+        variant="purpleBlock"
         className="w-full"
         disabled={submitting || added}
         onClick={handleAddToLibrary}

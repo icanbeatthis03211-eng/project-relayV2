@@ -18,7 +18,6 @@ export default function NewFeedbackPage() {
   const [customTags, setCustomTags] = useState<string[]>([]);
   const [newTagInput, setNewTagInput] = useState("");
   const [content, setContent] = useState("");
-  const [isShareable, setIsShareable] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
@@ -72,7 +71,9 @@ export default function NewFeedbackPage() {
         feedback_source: source,
         original_feedback: trimmed,
         tag: t,
-        is_shareable: isShareable,
+        // 공유 여부는 저장 시점에 묻지 않고, "내가 저장한 피드백" 화면에서
+        // 언제든 켜고 끌 수 있도록 기본값을 true로 둡니다.
+        is_shareable: true,
       });
       if (error) {
         setSubmitting(false);
@@ -170,29 +171,11 @@ export default function NewFeedbackPage() {
       <Card>
         <p className="text-lg font-semibold text-gray-900 mb-3">원본 피드백 내용</p>
         <textarea
-          className="w-full min-h-[140px] rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className="w-full min-h-[240px] rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
           placeholder="받은 피드백을 그대로 입력하거나 붙여넣으세요"
           value={content}
           onChange={(e) => setContent(e.target.value)}
         />
-      </Card>
-
-      <Card className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-semibold text-gray-900">공유 가능한 피드백인가요?</p>
-          <p className="text-xs text-gray-400 mt-1">
-            나중에 익명 카드로 변환해 라이브러리에 공유할 수 있어요
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setIsShareable((v) => !v)}
-          className={`w-12 h-7 rounded-full transition-all flex items-center px-1 ${
-            isShareable ? "bg-indigo-600 justify-end" : "bg-gray-200 justify-start"
-          }`}
-        >
-          <span className="w-5 h-5 rounded-full bg-white shadow" />
-        </button>
       </Card>
 
       {error && (

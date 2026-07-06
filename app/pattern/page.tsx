@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
+import ProgressBar from "@/components/ui/ProgressBar";
 import Skeleton from "@/components/ui/Skeleton";
-import TagBadge from "@/components/ui/Tag";
 import { CHECKLIST_MAP, REPEAT_THRESHOLD } from "@/lib/constants";
 import { computeTagCounts, getFeedbacksByUser } from "@/lib/queries";
 import { Feedback, Tag as TagType } from "@/lib/types";
@@ -13,9 +13,9 @@ import { getUserId } from "@/lib/user";
 function interpretationLine(tag: string, count: number): string {
   const desc = CHECKLIST_MAP[tag as TagType]?.description ?? "관련 피드백을 점검해보세요.";
   if (count >= REPEAT_THRESHOLD) {
-    return `${tag} — ${count}회 반복: ${desc}`;
+    return desc;
   }
-  return `${tag} — ${count}회: 아직 반복 피드백은 아니지만, 다음 프로젝트에서 함께 점검하면 좋아요.`;
+  return "아직 반복 피드백은 아니지만, 다음 프로젝트에서 함께 점검하면 좋아요.";
 }
 
 export default function PatternPage() {
@@ -39,6 +39,8 @@ export default function PatternPage() {
   );
 
   const topTag = tagCounts[0];
+  const maxCount = topTag?.count ?? 1;
+  const repeatedCount = tagCounts.filter((t) => t.count >= REPEAT_THRESHOLD).length;
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -65,30 +67,68 @@ export default function PatternPage() {
       )}
 
       {topTag && (
-        <Card variant="highlight" className="text-center">
-          <p className="text-xs font-semibold text-indigo-700 mb-1">가장 많이 반복된 영역</p>
-          <p className="text-2xl font-bold text-gray-900">{topTag.tag}</p>
-          <p className="text-sm text-gray-600 mt-2">{interpretationLine(topTag.tag, topTag.count)}</p>
+        <Card variant="highlight" className="flex items-center gap-4">
+          <div className="shrink-0 w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center">
+            <span className="text-2xl font-bold text-white">{topTag.count}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-indigo-700 mb-1">
+              가장 많이 반복된 영역
+            </p>
+            <p className="text-xl font-bold text-gray-900 truncate">{topTag.tag}</p>
+            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
+              {interpretationLine(topTag.tag, topTag.count)}
+            </p>
+          </div>
         </Card>
+      )}
+
+      {tagCounts.length > 0 && (
+        <p className="text-xs text-gray-400">
+          전체 {tagCounts.length}개 태그 중{" "}
+          <span className="font-semibold text-emerald-600">{repeatedCount}개</span>가
+          반복 피드백이에요.
+        </p>
       )}
 
       <div className="space-y-3">
         {tagCounts.map((tc) => {
-          const related = (feedbacks ?? []).filter((f) => f.tag === tc.tag).slice(0, 3);
+          const related = (feedbacks ?? []).filter((f) => f.tag === tc.tag).slice(0, 2);
           const repeated = tc.count >= REPEAT_THRESHOLD;
+          const percent = Math.max(10, Math.round((tc.count / maxCount) * 100));
           return (
             <Card key={tc.tag} variant={repeated ? "repeat" : "default"}>
               <div className="flex items-center justify-between mb-2">
-                <TagBadge label={tc.tag} variant={repeated ? "repeated" : "default"} />
-                <span className="text-sm font-semibold text-gray-500">{tc.count}회</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span
+                    className={`w-2 h-2 rounded-full shrink-0 ${
+                      repeated ? "bg-emerald-500" : "bg-gray-300"
+                    }`}
+                  />
+                  <p className="text-sm font-semibold text-gray-900 truncate">{tc.tag}</p>
+                </div>
+                <span
+                  className={`text-sm font-bold shrink-0 ml-2 ${
+                    repeated ? "text-emerald-600" : "text-gray-400"
+                  }`}
+                >
+                  {tc.count}회
+                </span>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
+
+              <ProgressBar percent={percent} variant={repeated ? "emerald" : "gray"} />
+
+              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
                 {interpretationLine(tc.tag, tc.count)}
               </p>
+
               {related.length > 0 && (
-                <div className="mt-3 space-y-2 border-t border-gray-100 pt-3">
+                <div className="mt-3 space-y-1.5 border-t border-gray-100 pt-3">
                   {related.map((fb) => (
-                    <p key={fb.id} className="text-xs text-gray-400 leading-relaxed line-clamp-2">
+                    <p
+                      key={fb.id}
+                      className="text-xs text-gray-400 leading-relaxed line-clamp-1"
+                    >
                       · {fb.original_feedback}
                     </p>
                   ))}
