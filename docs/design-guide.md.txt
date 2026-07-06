@@ -1,0 +1,96 @@
+# 🎨 [디자인 가이드] Project Relay
+
+## 1. 디자인 컨셉 & 컬러
+
+* **Tone & Manner:** 차분하고 신뢰감 있는 성장 관리 SaaS 디자인. 피드백을 다루는 서비스이기 때문에 너무 자극적이거나 게임처럼 보이기보다, 사용자가 자신의 피드백을 편안하게 돌아보고 정리할 수 있는 분위기를 지향한다. 전체적으로는 미니멀하고 깔끔한 라이트 모드 기반으로 구성하되, 카드 UI와 부드러운 그림자를 활용해 포트폴리오용 웹 서비스처럼 완성도 있게 보이도록 한다.
+
+* **Design Keyword:** Calm, Growth, Reflection, Organized, Trustworthy
+
+* **Point Color:** 피드백 관리와 성장의 느낌을 전달하기 위해 Indigo 계열과 Emerald/Teal 계열을 함께 사용한다. Indigo는 신뢰감과 SaaS다운 전문성을 주고, Emerald/Teal은 성장과 개선의 이미지를 보완한다.
+
+  * Primary Indigo: `#4F46E5`, `bg-indigo-600`
+  * Deep Indigo: `#3730A3`, `text-indigo-700`
+  * Soft Indigo Background: `#EEF2FF`, `bg-indigo-50`
+  * Growth Emerald: `#10B981`, `bg-emerald-500`
+  * Soft Emerald Background: `#ECFDF5`, `bg-emerald-50`
+  * Neutral Text: `#111827`, `text-gray-900`
+  * Sub Text: `#6B7280`, `text-gray-500`
+  * Border Gray: `#E5E7EB`, `border-gray-200`
+  * Background: `#F9FAFB`, `bg-gray-50`
+
+## 2. 컴포넌트 스타일 (Tailwind CSS)
+
+* **전체 레이아웃:** 모바일 퍼스트 기반으로 설계하며, 중앙 정렬된 SaaS 대시보드 형태를 사용한다. 기본 컨테이너는 `max-w-md` 또는 화면이 넓을 경우 `max-w-5xl`을 사용한다. 배경은 `bg-gray-50` 또는 `bg-gradient-to-b from-indigo-50 to-white`를 적용해 부드럽고 정돈된 느낌을 준다.
+
+* **Card layout:** 피드백 요약, 반복 피드백, 체크리스트, 공유 카드 등 주요 정보는 모두 카드 단위로 보여준다. 카드는 둥근 모서리와 부드러운 그림자를 적용해 사용자가 정보를 쉽게 구분할 수 있게 한다.
+
+  * 기본 카드: `bg-white rounded-2xl shadow-md border border-gray-100 p-5`
+  * 강조 카드: `bg-indigo-50 rounded-2xl border border-indigo-100 p-5`
+  * 공유 카드: `bg-white rounded-2xl shadow-xl border border-gray-100 p-6`
+  * 반복 피드백 카드: `bg-emerald-50 rounded-2xl border border-emerald-100 p-5`
+
+* **Buttons and interactions:** 주요 CTA 버튼은 Indigo 계열을 사용한다. 버튼에는 hover animation을 적용해 인터랙션이 명확하게 느껴지도록 한다.
+
+  * Primary Button: `bg-indigo-600 text-white rounded-xl px-5 py-3 font-semibold hover:bg-indigo-700 hover:scale-105 transition-all`
+  * Secondary Button: `bg-white text-indigo-600 border border-indigo-200 rounded-xl px-5 py-3 font-semibold hover:bg-indigo-50 transition-all`
+  * Share Button: `bg-emerald-500 text-white rounded-xl px-5 py-3 font-semibold hover:bg-emerald-600 hover:scale-105 transition-all`
+  * Disabled Button: `bg-gray-200 text-gray-400 rounded-xl px-5 py-3 cursor-not-allowed`
+
+* **Input style:** 피드백 입력은 부담 없이 작성할 수 있어야 하므로, 넓고 부드러운 입력 영역을 사용한다. Textarea는 충분한 높이를 제공하고, 포커스 시 Indigo 컬러로 강조한다.
+
+  * Text Input: `w-full rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500`
+  * Textarea: `w-full min-h-[140px] rounded-xl border border-gray-200 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none`
+  * Select Box: `w-full rounded-xl border border-gray-200 px-4 py-3 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500`
+
+* **Tag style:** 역량 태그는 작은 pill 형태로 보여준다. 선택된 태그와 미선택 태그의 차이를 명확하게 만든다.
+
+  * Selected Tag: `bg-indigo-600 text-white rounded-full px-3 py-1 text-sm font-medium`
+  * Default Tag: `bg-gray-100 text-gray-600 rounded-full px-3 py-1 text-sm hover:bg-indigo-50 hover:text-indigo-600 transition-all`
+  * Repeated Tag: `bg-emerald-100 text-emerald-700 rounded-full px-3 py-1 text-sm font-semibold`
+
+* **Progress / Status style:** 반복 피드백이나 체크리스트 진행률을 보여줄 때는 부드러운 progress bar를 사용한다. 진행 바는 애니메이션을 적용해 변화가 자연스럽게 보이게 한다.
+
+  * Progress Wrapper: `w-full h-3 bg-gray-100 rounded-full overflow-hidden`
+  * Progress Fill: `h-full bg-indigo-600 rounded-full transition-all duration-500`
+  * Checklist Complete Fill: `h-full bg-emerald-500 rounded-full transition-all duration-500`
+
+* **Checklist style:** 체크리스트는 사용자가 다음 프로젝트 전에 실제로 점검하는 화면이므로, 가독성과 클릭 편의성을 우선한다.
+
+  * Checklist Item: `flex items-start gap-3 bg-white rounded-xl border border-gray-100 p-4 shadow-sm`
+  * Checkbox: `w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500`
+  * Completed Text: `line-through text-gray-400`
+
+* **Typography:** 전체적으로 명확하고 읽기 쉬운 폰트 크기 계층을 사용한다. 제목은 굵게, 설명은 회색 계열로 차분하게 표현한다.
+
+  * Page Title: `text-3xl font-bold text-gray-900`
+  * Section Title: `text-xl font-bold text-gray-900`
+  * Card Title: `text-lg font-semibold text-gray-900`
+  * Body Text: `text-sm text-gray-600 leading-relaxed`
+  * Caption Text: `text-xs text-gray-400`
+
+* **Empty State:** 아직 저장된 피드백이 없거나 공유 데이터가 부족할 때는 빈 화면을 친절하게 보여준다. 사용자가 무엇을 해야 하는지 바로 알 수 있도록 CTA를 함께 배치한다.
+
+  * Empty State Box: `bg-white rounded-2xl border border-dashed border-gray-300 p-8 text-center`
+  * Empty State Text: `text-gray-500 text-sm`
+  * Empty State CTA: `mt-4 bg-indigo-600 text-white rounded-xl px-5 py-3 font-semibold hover:bg-indigo-700 transition-all`
+
+* **Animation:** 서비스가 너무 딱딱해 보이지 않도록 카드 등장, 버튼 hover, progress bar 변화에 부드러운 애니메이션을 적용한다.
+
+  * Card Hover: `hover:-translate-y-1 hover:shadow-xl transition-all`
+  * Button Hover: `hover:scale-105 transition-all`
+  * Fade In: `animate-fadeIn`
+  * Progress Animation: `transition-all duration-500 ease-out`
+
+## 3. 화면별 디자인 방향
+
+* **메인 화면 (Home):** 서비스의 핵심 가치가 바로 보이도록 상단에 강한 한 줄 카피와 [피드백 저장하기] 버튼을 배치한다. 아래에는 저장한 피드백 수, 반복 피드백 수, 체크리스트 수, 공유 카드 수를 카드형 지표로 보여준다.
+
+* **피드백 저장 화면 (Feedback):** 입력 부담을 줄이는 것이 핵심이다. 프로젝트 유형, 출처, 태그 선택은 드롭다운 또는 pill 버튼으로 구성하고, 피드백 원문 입력 영역은 넓고 단순하게 배치한다.
+
+* **내 반복 피드백 화면 (Pattern):** 반복된 태그를 시각적으로 강조한다. 2회 이상 반복된 태그는 Emerald 계열로 표시하고, 가장 많이 반복된 피드백은 상단에 큰 카드로 보여준다.
+
+* **다음 프로젝트 체크리스트 화면 (Checklist):** 체크박스 중심의 실용적인 화면으로 구성한다. 완료된 항목은 흐리게 처리하고, 진행률 바를 상단에 배치해 사용자가 준비 정도를 확인할 수 있게 한다.
+
+* **공유 가능한 피드백 카드 화면 (Share):** 실제로 공유하고 싶을 만큼 깔끔한 카드 디자인을 적용한다. 원본 피드백이 아니라 일반화된 학습 포인트만 보여주며, [카드 복사하기]와 [공유 라이브러리에 추가] 버튼을 하단에 배치한다.
+
+* **공유 피드백 라이브러리 화면 (Library):** 게시판처럼 보이지 않도록 댓글, 좋아요, 프로필 요소는 제거한다. 대신 프로젝트 유형 필터, 태그 필터, 공유 카드 목록 중심으로 학습 데이터베이스처럼 구성한다.

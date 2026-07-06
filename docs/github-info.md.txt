@@ -1,0 +1,5 @@
+# 🐙 [GitHub 정보] 원격 저장소 링크
+
+- **GitHub Account (계정명):** icanbeatthis03211-eng
+- **Repository Name:** project-relayV2
+- **Repository URL:** https://github.com/icanbeatthis03211-eng/project-relayV2
