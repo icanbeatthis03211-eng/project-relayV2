@@ -16,33 +16,24 @@ export default function Nav() {
   const pathname = usePathname();
 
   return (
-    <nav className="sticky top-[57px] z-30 bg-white/95 backdrop-blur border-b border-gray-200">
-      <div className="max-w-5xl mx-auto grid grid-cols-6">
-        {NAV_ITEMS.map((item) => {
-          const active =
-            item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="relative flex items-center justify-center py-3 text-sm transition-colors"
-            >
-              <span
-                className={
-                  active
-                    ? "font-semibold text-indigo-600"
-                    : "text-gray-400 hover:text-indigo-500"
-                }
-              >
-                {item.label}
-              </span>
-              {active && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-indigo-600" />
-              )}
-            </Link>
-          );
-        })}
-      </div>
+    <nav className="flex items-center gap-0.5 sm:gap-1 overflow-x-auto">
+      {NAV_ITEMS.map((item) => {
+        const active =
+          item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-sm whitespace-nowrap transition-colors ${
+              active
+                ? "bg-indigo-50 text-indigo-600 font-semibold"
+                : "text-gray-500 hover:text-indigo-600 hover:bg-gray-50"
+            }`}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
 }

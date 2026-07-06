@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
-import Nav from "@/components/Nav";
 
 export const metadata: Metadata = {
   title: "Project Relay",
@@ -18,7 +17,6 @@ export default function RootLayout({
     <html lang="ko">
       <body className="min-h-screen bg-gray-50 antialiased">
         <Header />
-        <Nav />
         <main className="max-w-5xl mx-auto px-6 sm:px-10 pb-10 pt-8">{children}</main>
       </body>
     </html>
