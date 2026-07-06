@@ -1,28 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-const STORAGE_KEY = "relay_seen_share_notice";
+import { useState } from "react";
 
 export default function ShareNoticeModal() {
-  const [show, setShow] = useState(false);
-
-  useEffect(() => {
-    try {
-      const seen = window.localStorage.getItem(STORAGE_KEY);
-      if (!seen) setShow(true);
-    } catch {
-      // localStorage를 쓸 수 없는 환경이면 그냥 표시하지 않아요.
-    }
-  }, []);
+  // 공유 카드 화면에 들어올 때마다(=공유하기를 누를 때마다) 매번 보여줘요.
+  const [show, setShow] = useState(true);
 
   function handleClose() {
     setShow(false);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, "1");
-    } catch {
-      // ignore
-    }
   }
 
   if (!show) return null;
