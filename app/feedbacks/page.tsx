@@ -26,7 +26,6 @@ function formatDate(iso: string) {
 interface EditDraft {
   tag: string;
   content: string;
-  isShareable: boolean;
 }
 
 export default function FeedbacksPage() {
@@ -51,8 +50,8 @@ export default function FeedbacksPage() {
       const list = data ?? [];
       setFeedbacks(list);
 
-      const shareableIds = list.filter((f) => f.is_shareable).map((f) => f.id);
-      const { data: sharedCards } = await getSharedCardsByFeedbackIds(shareableIds);
+      const allIds = list.map((f) => f.id);
+      const { data: sharedCards } = await getSharedCardsByFeedbackIds(allIds);
       if (sharedCards) {
         const map = new Map<string, string>();
         for (const card of sharedCards) {
@@ -101,7 +100,6 @@ export default function FeedbacksPage() {
     setDraft({
       tag: fb.tag,
       content: fb.original_feedback,
-      isShareable: fb.is_shareable,
     });
   }
 
@@ -119,7 +117,6 @@ export default function FeedbacksPage() {
     const { data, error } = await updateFeedback(fb.id, {
       tag: draft.tag,
       original_feedback: trimmed,
-      is_shareable: draft.isShareable,
     });
     setSavingId(null);
     if (error || !data) {
@@ -171,8 +168,8 @@ export default function FeedbacksPage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">내가 저장한 피드백</h1>
         <p className="text-sm text-gray-600 mt-1 leading-relaxed">
-          프로젝트별로 모아볼 수 있어요. 공유 가능으로 표시한 피드백은 익명
-          카드로 만들 수 있어요.
+          프로젝트별로 모아볼 수 있어요. 언제든 공유하기를 눌러 익명 카드로
+          만들 수 있어요.
         </p>
       </div>
 
@@ -264,17 +261,6 @@ export default function FeedbacksPage() {
                           value={draft.content}
                           onChange={(e) => setDraft({ ...draft, content: e.target.value })}
                         />
-                        <label className="flex items-center gap-2 text-xs text-gray-600">
-                          <input
-                            type="checkbox"
-                            checked={draft.isShareable}
-                            onChange={(e) =>
-                              setDraft({ ...draft, isShareable: e.target.checked })
-                            }
-                            className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                          />
-                          공유 가능한 피드백으로 표시
-                        </label>
                         <div className="flex gap-2">
                           <Button
                             variant="primary"
@@ -319,25 +305,23 @@ export default function FeedbacksPage() {
                               {deletingId === fb.id ? "삭제 중..." : "삭제"}
                             </button>
                           </div>
-                          {fb.is_shareable && (
-                            sharedMap.has(fb.id) ? (
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-emerald-600">
-                                  공유했어요
-                                </span>
-                                <button
-                                  onClick={() => handleUnshare(fb)}
-                                  disabled={unsharingId === fb.id}
-                                  className="text-xs text-gray-500 font-semibold hover:text-red-600 disabled:opacity-50"
-                                >
-                                  {unsharingId === fb.id ? "취소 중..." : "공유 취소"}
-                                </button>
-                              </div>
-                            ) : (
-                              <Link href={`/cards/${fb.id}`}>
-                                <Button variant="purple">공유하기</Button>
-                              </Link>
-                            )
+                          {sharedMap.has(fb.id) ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-semibold text-emerald-600">
+                                공유했어요
+                              </span>
+                              <Button
+                                variant="gray"
+                                disabled={unsharingId === fb.id}
+                                onClick={() => handleUnshare(fb)}
+                              >
+                                {unsharingId === fb.id ? "취소 중..." : "공유 취소"}
+                              </Button>
+                            </div>
+                          ) : (
+                            <Link href={`/cards/${fb.id}`}>
+                              <Button variant="purple">공유하기</Button>
+                            </Link>
                           )}
                         </div>
                       </>

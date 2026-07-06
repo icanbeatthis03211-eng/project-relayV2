@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
 import Skeleton from "@/components/ui/Skeleton";
@@ -170,13 +171,13 @@ export default function LibraryPage() {
                     {formatDate(card.created_at)}
                   </span>
                   {isMine && (
-                    <button
-                      onClick={() => handleUnshare(card)}
+                    <Button
+                      variant="gray"
                       disabled={unsharingId === card.id}
-                      className="text-xs text-gray-400 font-semibold hover:text-red-600 disabled:opacity-50"
+                      onClick={() => handleUnshare(card)}
                     >
                       {unsharingId === card.id ? "취소 중..." : "공유 취소"}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>

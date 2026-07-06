@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Card from "@/components/ui/Card";
 import EmptyState from "@/components/ui/EmptyState";
-import ProgressBar from "@/components/ui/ProgressBar";
 import Skeleton from "@/components/ui/Skeleton";
 import { CHECKLIST_MAP, REPEAT_THRESHOLD } from "@/lib/constants";
 import { computeTagCounts, getFeedbacksByUser } from "@/lib/queries";
@@ -17,6 +16,8 @@ function interpretationLine(tag: string, count: number): string {
   }
   return "아직 반복 피드백은 아니지만, 다음 프로젝트에서 함께 점검하면 좋아요.";
 }
+
+const RANK_BADGE_COLORS = ["bg-emerald-500", "bg-emerald-400", "bg-emerald-300"];
 
 export default function PatternPage() {
   const [feedbacks, setFeedbacks] = useState<Feedback[] | null>(null);
@@ -57,7 +58,7 @@ export default function PatternPage() {
 
       {feedbacks === null && !error && (
         <div className="space-y-3">
-          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-32 w-full" />
           <Skeleton className="h-20 w-full" />
         </div>
       )}
@@ -67,58 +68,72 @@ export default function PatternPage() {
       )}
 
       {topTag && (
-        <Card variant="highlight" className="flex items-center gap-4">
-          <div className="shrink-0 w-16 h-16 rounded-full bg-indigo-600 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">{topTag.count}</span>
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-900 text-white p-6 shadow-md">
+          <p className="text-xs font-bold text-indigo-200 tracking-wide uppercase mb-3">
+            가장 많이 반복된 영역
+          </p>
+          <div className="flex items-end gap-2">
+            <span className="text-5xl font-bold leading-none">{topTag.count}</span>
+            <span className="text-sm font-semibold text-indigo-200 mb-1.5">회 반복</span>
           </div>
-          <div className="min-w-0">
-            <p className="text-xs font-semibold text-indigo-700 mb-1">
-              가장 많이 반복된 영역
-            </p>
-            <p className="text-xl font-bold text-gray-900 truncate">{topTag.tag}</p>
-            <p className="text-xs text-gray-500 mt-1 leading-relaxed">
-              {interpretationLine(topTag.tag, topTag.count)}
-            </p>
-          </div>
-        </Card>
+          <p className="text-2xl font-bold mt-3">{topTag.tag}</p>
+          <p className="text-sm text-indigo-100 mt-2 leading-relaxed">
+            {interpretationLine(topTag.tag, topTag.count)}
+          </p>
+        </div>
       )}
 
       {tagCounts.length > 0 && (
         <p className="text-xs text-gray-400">
           전체 {tagCounts.length}개 태그 중{" "}
-          <span className="font-semibold text-emerald-600">{repeatedCount}개</span>가
-          반복 피드백이에요.
+          <span className="font-bold text-emerald-600">{repeatedCount}개</span>가 반복
+          피드백이에요.
         </p>
       )}
 
       <div className="space-y-3">
-        {tagCounts.map((tc) => {
+        {tagCounts.map((tc, index) => {
           const related = (feedbacks ?? []).filter((f) => f.tag === tc.tag).slice(0, 2);
           const repeated = tc.count >= REPEAT_THRESHOLD;
           const percent = Math.max(10, Math.round((tc.count / maxCount) * 100));
+          const badgeColor = repeated
+            ? RANK_BADGE_COLORS[index] ?? "bg-emerald-200"
+            : "bg-gray-200";
+          const badgeText = repeated ? "text-white" : "text-gray-500";
+
           return (
-            <Card key={tc.tag} variant={repeated ? "repeat" : "default"}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span
-                    className={`w-2 h-2 rounded-full shrink-0 ${
-                      repeated ? "bg-emerald-500" : "bg-gray-300"
-                    }`}
-                  />
-                  <p className="text-sm font-semibold text-gray-900 truncate">{tc.tag}</p>
+            <div
+              key={tc.tag}
+              className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 hover:-translate-y-1 hover:shadow-lg transition-all"
+            >
+              <div className="flex items-center gap-3 mb-3">
+                <div
+                  className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${badgeColor} ${badgeText}`}
+                >
+                  {index + 1}
                 </div>
+                <p className="flex-1 min-w-0 text-base font-bold text-gray-900 truncate">
+                  {tc.tag}
+                </p>
                 <span
-                  className={`text-sm font-bold shrink-0 ml-2 ${
-                    repeated ? "text-emerald-600" : "text-gray-400"
+                  className={`shrink-0 text-xl font-bold ${
+                    repeated ? "text-emerald-600" : "text-gray-300"
                   }`}
                 >
-                  {tc.count}회
+                  {tc.count}
                 </span>
               </div>
 
-              <ProgressBar percent={percent} variant={repeated ? "emerald" : "gray"} />
+              <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    repeated ? "bg-emerald-500" : "bg-gray-300"
+                  }`}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
 
-              <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+              <p className="text-xs text-gray-500 mt-2.5 leading-relaxed">
                 {interpretationLine(tc.tag, tc.count)}
               </p>
 
@@ -134,7 +149,7 @@ export default function PatternPage() {
                   ))}
                 </div>
               )}
-            </Card>
+            </div>
           );
         })}
       </div>
