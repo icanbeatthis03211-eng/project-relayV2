@@ -7,8 +7,14 @@ import EmptyState from "@/components/ui/EmptyState";
 import Skeleton from "@/components/ui/Skeleton";
 import TagBadge from "@/components/ui/Tag";
 import { PROJECT_TYPES, TAGS } from "@/lib/constants";
-import { computeSharedTagFrequency, deleteSharedCard, getSharedCards } from "@/lib/queries";
+import {
+  computeSharedTagFrequency,
+  deleteSharedCard,
+  getFeedbacksByUser,
+  getSharedCards,
+} from "@/lib/queries";
 import { SharedCard } from "@/lib/types";
+import { getUserId } from "@/lib/user";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -22,6 +28,19 @@ export default function LibraryPage() {
   const [tag, setTag] = useState<string | null>(null);
   const [freqCards, setFreqCards] = useState<SharedCard[] | null>(null);
   const [unsharingId, setUnsharingId] = useState<string | null>(null);
+  const [myFeedbackIds, setMyFeedbackIds] = useState<Set<string>>(new Set());
+  const currentUserId = useMemo(() => getUserId(), []);
+
+  // 레거시 공유 카드(예전 버전이라 user_id가 비어있는 카드)의 소유 여부를
+  // 판별하기 위한 보조 데이터입니다. user_id가 있는 카드는 이걸 쓸 필요 없어요.
+  useEffect(() => {
+    (async () => {
+      const { data } = await getFeedbacksByUser(currentUserId);
+      if (data) {
+        setMyFeedbackIds(new Set(data.map((fb) => fb.id)));
+      }
+    })();
+  }, [currentUserId]);
 
   useEffect(() => {
     (async () => {
@@ -141,31 +160,38 @@ export default function LibraryPage() {
       )}
 
       <div className="space-y-3">
-        {cards?.map((card) => (
-          <Card key={card.id} variant="share" hoverable>
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex flex-wrap gap-2">
-                <TagBadge label={card.project_type} variant="default" />
-                <TagBadge label={card.tag} variant="selected" />
+        {cards?.map((card) => {
+          const isMine = card.user_id
+            ? card.user_id === currentUserId
+            : !!card.feedback_id && myFeedbackIds.has(card.feedback_id);
+          return (
+            <Card key={card.id} variant="share" hoverable>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex flex-wrap gap-2">
+                  <TagBadge label={card.project_type} variant="default" />
+                  <TagBadge label={card.tag} variant="selected" />
+                </div>
+                <div className="flex items-center gap-2 shrink-0 ml-2">
+                  <span className="text-xs text-gray-400 whitespace-nowrap">
+                    {formatDate(card.created_at)}
+                  </span>
+                  {isMine && (
+                    <Button
+                      variant="gray"
+                      disabled={unsharingId === card.id}
+                      onClick={() => handleUnshare(card)}
+                    >
+                      {unsharingId === card.id ? "취소 중..." : "공유 취소"}
+                    </Button>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0 ml-2">
-                <span className="text-xs text-gray-400 whitespace-nowrap">
-                  {formatDate(card.created_at)}
-                </span>
-                <Button
-                  variant="gray"
-                  disabled={unsharingId === card.id}
-                  onClick={() => handleUnshare(card)}
-                >
-                  {unsharingId === card.id ? "취소 중..." : "공유 취소"}
-                </Button>
-              </div>
-            </div>
-            <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
-              {card.generalized_feedback}
-            </p>
-          </Card>
-        ))}
+              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {card.generalized_feedback}
+              </p>
+            </Card>
+          );
+        })}
       </div>
     </div>
   );

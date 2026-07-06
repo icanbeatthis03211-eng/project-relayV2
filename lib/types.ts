@@ -38,6 +38,7 @@ export interface Feedback {
 export interface SharedCard {
   id: string;
   feedback_id: string | null;
+  user_id: string | null;
   project_type: string;
   generalized_feedback: string;
   tag: string;

@@ -177,6 +177,7 @@ export async function resetChecklist(
 
 export async function createSharedCard(input: {
   feedback_id: string | null;
+  user_id: string;
   project_type: string;
   generalized_feedback: string;
   tag: string;

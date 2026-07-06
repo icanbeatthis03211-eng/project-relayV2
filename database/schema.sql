@@ -85,8 +85,14 @@ create table if not exists public.shared_cards (
   created_at timestamptz not null default now()
 );
 
+-- 이미 만들어진 테이블에도 안전하게 추가되도록 별도 alter 문으로 둡니다.
+-- (카드를 누가 공유했는지 저장해서, "내가 공유한 카드"만 정확히 구분하고
+--  공유 취소할 수 있게 하기 위한 컬럼입니다.)
+alter table public.shared_cards add column if not exists user_id text;
+
 create index if not exists shared_cards_project_type_idx on public.shared_cards (project_type);
 create index if not exists shared_cards_tag_idx on public.shared_cards (tag);
+create index if not exists shared_cards_user_id_idx on public.shared_cards (user_id);
 
 alter table public.shared_cards enable row level security;
 

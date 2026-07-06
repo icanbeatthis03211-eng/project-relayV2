@@ -10,6 +10,7 @@ import Toast from "@/components/ui/Toast";
 import { CHECKLIST_MAP } from "@/lib/constants";
 import { createSharedCard, getFeedbackById } from "@/lib/queries";
 import { Feedback, Tag as TagType } from "@/lib/types";
+import { getUserId } from "@/lib/user";
 
 export default function CardEditor({ feedbackId }: { feedbackId: string }) {
   const router = useRouter();
@@ -44,6 +45,7 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
     setSubmitError(null);
     const { error } = await createSharedCard({
       feedback_id: feedback.id,
+      user_id: getUserId(),
       project_type: feedback.project_type,
       generalized_feedback: generalizedFeedback.trim(),
       tag: feedback.tag,
