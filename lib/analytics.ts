@@ -2,7 +2,7 @@
 // 페이지뷰는 @next/third-parties/google의 <GoogleAnalytics /> 컴포넌트가 자동으로 수집하고,
 // 여기서는 기획서(§9 측정 계획)에 정의한 핵심 행동 이벤트만 별도로 전송합니다.
 
-export const GA_MEASUREMENT_ID = "G-TYSBJYK9FE";
+export const GA_MEASUREMENT_ID = "G-G3ZGCPPLHC";
 
 declare global {
   interface Window {
