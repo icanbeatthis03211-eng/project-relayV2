@@ -15,6 +15,7 @@ import {
 } from "@/lib/queries";
 import { SharedCard } from "@/lib/types";
 import { getUserId } from "@/lib/user";
+import { trackEvent } from "@/lib/analytics";
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -30,6 +31,10 @@ export default function LibraryPage() {
   const [unsharingId, setUnsharingId] = useState<string | null>(null);
   const [myFeedbackIds, setMyFeedbackIds] = useState<Set<string>>(new Set());
   const currentUserId = useMemo(() => getUserId(), []);
+
+  useEffect(() => {
+    trackEvent("view_feedback_library");
+  }, []);
 
   // 레거시 공유 카드(예전 버전이라 user_id가 비어있는 카드)의 소유 여부를
   // 판별하기 위한 보조 데이터입니다. user_id가 있는 카드는 이걸 쓸 필요 없어요.

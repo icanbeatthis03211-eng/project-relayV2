@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 
 export const metadata: Metadata = {
   title: "Project Relay",
@@ -19,6 +21,7 @@ export default function RootLayout({
         <Header />
         <main className="max-w-5xl mx-auto px-6 sm:px-10 pb-10 pt-8">{children}</main>
       </body>
+      <GoogleAnalytics gaId={GA_MEASUREMENT_ID} />
     </html>
   );
 }

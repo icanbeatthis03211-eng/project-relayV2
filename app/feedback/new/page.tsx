@@ -9,6 +9,7 @@ import Toast from "@/components/ui/Toast";
 import { FEEDBACK_SOURCES, PROJECT_TYPES, TAGS } from "@/lib/constants";
 import { createFeedback, getDistinctTagsByUser } from "@/lib/queries";
 import { getUserId } from "@/lib/user";
+import { trackEvent } from "@/lib/analytics";
 
 export default function NewFeedbackPage() {
   const router = useRouter();
@@ -21,6 +22,10 @@ export default function NewFeedbackPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState(false);
+
+  useEffect(() => {
+    trackEvent("view_feedback_form");
+  }, []);
 
   // 이전에 직접 추가했던 커스텀 태그를 불러와 다시 고를 수 있게 해줍니다.
   useEffect(() => {
@@ -83,6 +88,7 @@ export default function NewFeedbackPage() {
     }
 
     setSubmitting(false);
+    trackEvent("submit_feedback", { project_type: projectType, tag_count: tags.length });
     setToast(true);
     setTimeout(() => router.push("/feedbacks"), 700);
   }

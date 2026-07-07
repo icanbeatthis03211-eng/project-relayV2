@@ -14,6 +14,7 @@ import {
 } from "@/lib/queries";
 import { Tag as TagType } from "@/lib/types";
 import { getUserId } from "@/lib/user";
+import { trackEvent } from "@/lib/analytics";
 
 interface ChecklistItem {
   tag: string;
@@ -56,6 +57,10 @@ export default function ChecklistPage() {
   useEffect(() => {
     load().catch(() => setError("체크리스트를 불러오지 못했어요."));
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    trackEvent("view_action_guide");
   }, []);
 
   async function toggle(tag: string) {

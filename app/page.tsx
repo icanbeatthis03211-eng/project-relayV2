@@ -8,6 +8,7 @@ import Skeleton from "@/components/ui/Skeleton";
 import { getUserId } from "@/lib/user";
 import { computeTagCounts, getFeedbacksByUser } from "@/lib/queries";
 import { REPEAT_THRESHOLD } from "@/lib/constants";
+import { trackEvent } from "@/lib/analytics";
 
 interface Stats {
   feedbackCount: number;
@@ -63,7 +64,7 @@ export default function HomePage() {
           있어요.
         </p>
         <div className="mt-6">
-          <Link href="/feedback/new">
+          <Link href="/feedback/new" onClick={() => trackEvent("click_start")}>
             <Button variant="primary">피드백 저장하기</Button>
           </Link>
         </div>
