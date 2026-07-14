@@ -73,6 +73,28 @@ export async function getDistinctTagsByUser(
   return { data: Array.from(unique), error: null };
 }
 
+/**
+ * 사용자가 지금까지 저장한 피드백에서 사용된 모든 프로젝트 유형(중복 제거)을
+ * 가져옵니다. 미리 정의된 목록에 없는, 사용자가 직접 입력한 프로젝트 이름을
+ * 다음 저장 화면에서도 다시 골라 쓸 수 있게 하기 위해 사용해요.
+ */
+export async function getDistinctProjectTypesByUser(
+  userId: string
+): Promise<QueryResult<string[]>> {
+  const { data, error } = await supabase
+    .from("feedbacks")
+    .select("project_type")
+    .eq("user_id", userId);
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+
+  const unique = new Set<string>();
+  for (const row of data as { project_type: string }[]) {
+    if (row.project_type) unique.add(row.project_type);
+  }
+  return { data: Array.from(unique), error: null };
+}
+
 export async function updateFeedback(
   id: string,
   patch: Partial<{
