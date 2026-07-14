@@ -24,7 +24,7 @@ function formatDate(iso: string) {
 }
 
 interface EditDraft {
-  tag: string;
+  tags: string[];
   content: string;
 }
 
@@ -98,7 +98,7 @@ export default function FeedbacksPage() {
     setRowError(null);
     setEditingId(fb.id);
     setDraft({
-      tag: fb.tag,
+      tags: fb.tags && fb.tags.length > 0 ? fb.tags : [fb.tag],
       content: fb.original_feedback,
     });
   }
@@ -108,14 +108,24 @@ export default function FeedbacksPage() {
     setDraft(null);
   }
 
+  function toggleDraftTag(t: string) {
+    setDraft((prev) => {
+      if (!prev) return prev;
+      const next = prev.tags.includes(t)
+        ? prev.tags.filter((v) => v !== t)
+        : [...prev.tags, t];
+      return { ...prev, tags: next };
+    });
+  }
+
   async function saveEdit(fb: Feedback) {
     if (!draft) return;
     const trimmed = draft.content.trim();
-    if (!trimmed) return;
+    if (!trimmed || draft.tags.length === 0) return;
     setSavingId(fb.id);
     setRowError(null);
     const { data, error } = await updateFeedback(fb.id, {
-      tag: draft.tag,
+      tags: draft.tags,
       original_feedback: trimmed,
     });
     setSavingId(null);
@@ -161,7 +171,9 @@ export default function FeedbacksPage() {
   }
 
   const tagOptionsFor = (fb: Feedback) =>
-    Array.from(new Set<string>([...TAGS, fb.tag]));
+    Array.from(
+      new Set<string>([...TAGS, ...(fb.tags && fb.tags.length > 0 ? fb.tags : [fb.tag])])
+    );
 
   return (
     <div className="space-y-6 animate-fadeIn">
@@ -243,18 +255,19 @@ export default function FeedbacksPage() {
                     {isEditing && draft ? (
                       <div className="space-y-3">
                         <div>
-                          <p className="text-xs font-semibold text-gray-500 mb-1">역량 태그</p>
-                          <select
-                            value={draft.tag}
-                            onChange={(e) => setDraft({ ...draft, tag: e.target.value })}
-                            className="w-full rounded-xl border border-gray-200 px-3 py-2 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
+                          <p className="text-xs font-semibold text-gray-500 mb-1">
+                            역량 태그 (여러 개 선택 가능)
+                          </p>
+                          <div className="flex flex-wrap gap-2">
                             {tagOptionsFor(fb).map((t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
+                              <TagBadge
+                                key={t}
+                                label={t}
+                                variant={draft.tags.includes(t) ? "selected" : "default"}
+                                onClick={() => toggleDraftTag(t)}
+                              />
                             ))}
-                          </select>
+                          </div>
                         </div>
                         <textarea
                           className="w-full min-h-[100px] rounded-xl border border-gray-200 px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
@@ -265,7 +278,7 @@ export default function FeedbacksPage() {
                           <Button
                             variant="primary"
                             className="flex-1"
-                            disabled={savingId === fb.id}
+                            disabled={savingId === fb.id || draft.tags.length === 0}
                             onClick={() => saveEdit(fb)}
                           >
                             {savingId === fb.id ? "저장 중..." : "저장"}
@@ -280,7 +293,9 @@ export default function FeedbacksPage() {
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex flex-wrap gap-2">
                             <TagBadge label={fb.feedback_source} variant="default" />
-                            <TagBadge label={fb.tag} variant="selected" />
+                            {(fb.tags && fb.tags.length > 0 ? fb.tags : [fb.tag]).map((t) => (
+                              <TagBadge key={t} label={t} variant="selected" />
+                            ))}
                           </div>
                           <span className="text-xs text-gray-400 whitespace-nowrap ml-2">
                             {formatDate(fb.created_at)}

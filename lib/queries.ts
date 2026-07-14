@@ -1,5 +1,9 @@
 import { supabase } from "./supabase/client";
-import { ChecklistStatus, Feedback, SharedCard, TagCount } from "./types";
+import { Assignment, ChecklistStatus, Feedback, SharedCard, TagCount } from "./types";
+
+function tagsOf(item: { tag: string; tags?: string[] | null }): string[] {
+  return item.tags && item.tags.length > 0 ? item.tags : [item.tag];
+}
 
 export interface QueryResult<T> {
   data: T | null;
@@ -20,12 +24,13 @@ export async function createFeedback(input: {
   project_type: string;
   feedback_source: string;
   original_feedback: string;
-  tag: string;
+  tags: string[];
   is_shareable: boolean;
 }): Promise<QueryResult<Feedback>> {
+  const { tags, ...rest } = input;
   const { data, error } = await supabase
     .from("feedbacks")
-    .insert([input])
+    .insert([{ ...rest, tag: tags[0] ?? "기타", tags }])
     .select()
     .single();
 
@@ -56,15 +61,16 @@ export async function getDistinctTagsByUser(
 ): Promise<QueryResult<string[]>> {
   const { data, error } = await supabase
     .from("feedbacks")
-    .select("tag")
+    .select("tag, tags")
     .eq("user_id", userId);
 
   if (error) return { data: null, error: toErrorMessage(error) };
 
-  const unique = Array.from(
-    new Set((data as { tag: string }[]).map((row) => row.tag))
-  );
-  return { data: unique, error: null };
+  const unique = new Set<string>();
+  for (const row of data as { tag: string; tags: string[] | null }[]) {
+    tagsOf(row).forEach((t) => unique.add(t));
+  }
+  return { data: Array.from(unique), error: null };
 }
 
 export async function updateFeedback(
@@ -73,13 +79,20 @@ export async function updateFeedback(
     project_type: string;
     feedback_source: string;
     original_feedback: string;
-    tag: string;
+    tags: string[];
     is_shareable: boolean;
   }>
 ): Promise<QueryResult<Feedback>> {
+  const { tags, ...rest } = patch;
+  const dbPatch: Record<string, unknown> = { ...rest };
+  if (tags) {
+    dbPatch.tags = tags;
+    dbPatch.tag = tags[0] ?? "기타";
+  }
+
   const { data, error } = await supabase
     .from("feedbacks")
-    .update(patch)
+    .update(dbPatch)
     .eq("id", id)
     .select()
     .single();
@@ -115,7 +128,9 @@ export async function getFeedbackById(
 export function computeTagCounts(feedbacks: Feedback[]): TagCount[] {
   const counts = new Map<string, number>();
   for (const fb of feedbacks) {
-    counts.set(fb.tag, (counts.get(fb.tag) ?? 0) + 1);
+    for (const t of tagsOf(fb)) {
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
   }
   return Array.from(counts.entries())
     .map(([tag, count]) => ({ tag, count }))
@@ -180,12 +195,13 @@ export async function createSharedCard(input: {
   user_id: string;
   project_type: string;
   generalized_feedback: string;
-  tag: string;
+  tags: string[];
   action_item: string;
 }): Promise<QueryResult<SharedCard>> {
+  const { tags, ...rest } = input;
   const { data, error } = await supabase
     .from("shared_cards")
-    .insert([input])
+    .insert([{ ...rest, tag: tags[0] ?? "기타", tags }])
     .select()
     .single();
 
@@ -193,6 +209,11 @@ export async function createSharedCard(input: {
   return { data: data as SharedCard, error: null };
 }
 
+/**
+ * tag 필터는 shared_cards.tags 배열에 포함되는지로 판단하기 때문에
+ * (레거시 카드는 단일 tag 컬럼으로 대체) 서버에는 projectType만 넘기고,
+ * tag 필터는 클라이언트에서 걸러냅니다.
+ */
 export async function getSharedCards(filters?: {
   projectType?: string;
   tag?: string;
@@ -205,14 +226,15 @@ export async function getSharedCards(filters?: {
   if (filters?.projectType) {
     query = query.eq("project_type", filters.projectType);
   }
-  if (filters?.tag) {
-    query = query.eq("tag", filters.tag);
-  }
 
   const { data, error } = await query;
 
   if (error) return { data: null, error: toErrorMessage(error) };
-  return { data: (data as SharedCard[]) ?? [], error: null };
+  let cards = (data as SharedCard[]) ?? [];
+  if (filters?.tag) {
+    cards = cards.filter((c) => tagsOf(c).includes(filters.tag as string));
+  }
+  return { data: cards, error: null };
 }
 
 /**
@@ -243,9 +265,78 @@ export async function deleteSharedCard(id: string): Promise<QueryResult<null>> {
 export function computeSharedTagFrequency(cards: SharedCard[]): TagCount[] {
   const counts = new Map<string, number>();
   for (const card of cards) {
-    counts.set(card.tag, (counts.get(card.tag) ?? 0) + 1);
+    for (const t of tagsOf(card)) {
+      counts.set(t, (counts.get(t) ?? 0) + 1);
+    }
   }
   return Array.from(counts.entries())
     .map(([tag, count]) => ({ tag, count }))
     .sort((a, b) => b.count - a.count);
+}
+
+// ---------- assignments ----------
+
+const ASSIGNMENTS_BUCKET = "assignments";
+
+export async function uploadAssignmentFile(
+  userId: string,
+  file: File
+): Promise<QueryResult<{ path: string }>> {
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : undefined;
+  const path = `${userId}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
+  const { error } = await supabase.storage.from(ASSIGNMENTS_BUCKET).upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+    contentType: file.type || undefined,
+  });
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: { path }, error: null };
+}
+
+export function getAssignmentFileUrl(path: string): string {
+  const { data } = supabase.storage.from(ASSIGNMENTS_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+export async function createAssignment(input: {
+  user_id: string;
+  project_type: string;
+  title: string;
+  file_path: string;
+  file_name: string;
+  file_size: number;
+}): Promise<QueryResult<Assignment>> {
+  const { data, error } = await supabase
+    .from("assignments")
+    .insert([input])
+    .select()
+    .single();
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: data as Assignment, error: null };
+}
+
+export async function getAssignmentsByUser(
+  userId: string
+): Promise<QueryResult<Assignment[]>> {
+  const { data, error } = await supabase
+    .from("assignments")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: (data as Assignment[]) ?? [], error: null };
+}
+
+export async function deleteAssignment(
+  id: string,
+  filePath: string
+): Promise<QueryResult<null>> {
+  await supabase.storage.from(ASSIGNMENTS_BUCKET).remove([filePath]);
+  const { error } = await supabase.from("assignments").delete().eq("id", id);
+
+  if (error) return { data: null, error: toErrorMessage(error) };
+  return { data: null, error: null };
 }

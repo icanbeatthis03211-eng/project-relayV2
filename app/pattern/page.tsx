@@ -93,7 +93,9 @@ export default function PatternPage() {
 
       <div className="space-y-3">
         {tagCounts.map((tc, index) => {
-          const related = (feedbacks ?? []).filter((f) => f.tag === tc.tag).slice(0, 2);
+          const related = (feedbacks ?? [])
+            .filter((f) => (f.tags && f.tags.length > 0 ? f.tags : [f.tag]).includes(tc.tag))
+            .slice(0, 2);
           const repeated = tc.count >= REPEAT_THRESHOLD;
           const percent = Math.max(10, Math.round((tc.count / maxCount) * 100));
           const badgeColor = repeated

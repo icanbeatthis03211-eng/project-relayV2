@@ -1,4 +1,5 @@
 export type ProjectType =
+  | "개인 프로젝트"
   | "역기획 프로젝트"
   | "데이터 드리븐 프로젝트"
   | "MVP 프로젝트"
@@ -30,6 +31,7 @@ export interface Feedback {
   original_feedback: string;
   summary: string | null;
   tag: string;
+  tags: string[];
   action_item: string | null;
   is_shareable: boolean;
   created_at: string;
@@ -42,7 +44,19 @@ export interface SharedCard {
   project_type: string;
   generalized_feedback: string;
   tag: string;
+  tags: string[];
   action_item: string;
+  created_at: string;
+}
+
+export interface Assignment {
+  id: string;
+  user_id: string;
+  project_type: string;
+  title: string;
+  file_path: string;
+  file_name: string;
+  file_size: number | null;
   created_at: string;
 }
 

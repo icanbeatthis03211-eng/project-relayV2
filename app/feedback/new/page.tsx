@@ -66,25 +66,23 @@ export default function NewFeedbackPage() {
     const userId = getUserId();
     const trimmed = content.trim();
 
-    // 선택한 역량 태그마다 하나의 피드백 기록을 저장합니다.
-    // (같은 원본 피드백이 여러 역량과 관련 있을 수 있기 때문에,
-    //  태그별 반복 감지 로직이 정확히 동작하도록 태그당 한 행씩 남깁니다.)
-    for (const t of tags) {
-      const { error } = await createFeedback({
-        user_id: userId,
-        project_type: projectType,
-        feedback_source: source,
-        original_feedback: trimmed,
-        tag: t,
-        // 공유 여부는 저장 시점에 묻지 않고, "내가 저장한 피드백" 화면에서
-        // 언제든 켜고 끌 수 있도록 기본값을 true로 둡니다.
-        is_shareable: true,
-      });
-      if (error) {
-        setSubmitting(false);
-        setError(error);
-        return;
-      }
+    // 선택한 역량 태그를 모두 하나의 피드백 기록에 함께 저장합니다.
+    // (반복 감지는 각 피드백의 태그 배열을 펼쳐서 계산하므로, 굳이 태그마다
+    //  별도 행을 만들지 않아도 정확하게 동작해요.)
+    const { error } = await createFeedback({
+      user_id: userId,
+      project_type: projectType,
+      feedback_source: source,
+      original_feedback: trimmed,
+      tags,
+      // 공유 여부는 저장 시점에 묻지 않고, "내가 저장한 피드백" 화면에서
+      // 언제든 켜고 끌 수 있도록 기본값을 true로 둡니다.
+      is_shareable: true,
+    });
+    if (error) {
+      setSubmitting(false);
+      setError(error);
+      return;
     }
 
     setSubmitting(false);

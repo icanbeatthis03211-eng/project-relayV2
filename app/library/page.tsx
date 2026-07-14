@@ -174,7 +174,9 @@ export default function LibraryPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex flex-wrap gap-2">
                   <TagBadge label={card.project_type} variant="default" />
-                  <TagBadge label={card.tag} variant="selected" />
+                  {(card.tags && card.tags.length > 0 ? card.tags : [card.tag]).map((t) => (
+                    <TagBadge key={t} label={t} variant="selected" />
+                  ))}
                 </div>
                 <div className="flex items-center gap-2 shrink-0 ml-2">
                   <span className="text-xs text-gray-400 whitespace-nowrap">

@@ -1,6 +1,7 @@
 import { FeedbackSource, ProjectType, Tag } from "./types";
 
 export const PROJECT_TYPES: ProjectType[] = [
+  "개인 프로젝트",
   "서비스 기획 입문",
   "서비스 기획 숙련",
   "서비스 기획 심화",

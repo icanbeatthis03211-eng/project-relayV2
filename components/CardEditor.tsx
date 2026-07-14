@@ -33,9 +33,10 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
       }
       setFeedback(data);
       setGeneralizedFeedback(data.original_feedback);
-      // 화면에는 보이지 않지만, 태그 기반 체크 문구를 조심할 점으로 함께 저장해요.
+      // 화면에는 보이지 않지만, 대표 태그 기반 체크 문구를 조심할 점으로 함께 저장해요.
+      const primaryTag = data.tags && data.tags.length > 0 ? data.tags[0] : data.tag;
       setActionItem(
-        CHECKLIST_MAP[data.tag as TagType]?.question ?? "다음 프로젝트에서 함께 점검해보세요."
+        CHECKLIST_MAP[primaryTag as TagType]?.question ?? "다음 프로젝트에서 함께 점검해보세요."
       );
     })();
   }, [feedbackId]);
@@ -49,7 +50,7 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
       user_id: getUserId(),
       project_type: feedback.project_type,
       generalized_feedback: generalizedFeedback.trim(),
-      tag: feedback.tag,
+      tags: feedback.tags && feedback.tags.length > 0 ? feedback.tags : [feedback.tag],
       action_item: actionItem.trim(),
     });
     setSubmitting(false);
@@ -93,7 +94,11 @@ export default function CardEditor({ feedbackId }: { feedbackId: string }) {
       <Card variant="share" className="space-y-4">
         <div className="flex flex-wrap gap-2">
           <TagBadge label={feedback.project_type} variant="default" />
-          <TagBadge label={feedback.tag} variant="selected" />
+          {(feedback.tags && feedback.tags.length > 0 ? feedback.tags : [feedback.tag]).map(
+            (t) => (
+              <TagBadge key={t} label={t} variant="selected" />
+            )
+          )}
         </div>
 
         <div>
