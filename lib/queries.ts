@@ -1,5 +1,5 @@
 import { supabase } from "./supabase/client";
-import { Assignment, ChecklistStatus, Feedback, SharedCard, TagCount } from "./types";
+import { ChecklistStatus, Feedback, SharedCard, TagCount } from "./types";
 
 function tagsOf(item: { tag: string; tags?: string[] | null }): string[] {
   return item.tags && item.tags.length > 0 ? item.tags : [item.tag];
@@ -26,6 +26,9 @@ export async function createFeedback(input: {
   original_feedback: string;
   tags: string[];
   is_shareable: boolean;
+  attachment_path?: string | null;
+  attachment_name?: string | null;
+  attachment_size?: number | null;
 }): Promise<QueryResult<Feedback>> {
   const { tags, ...rest } = input;
   const { data, error } = await supabase
@@ -123,7 +126,16 @@ export async function updateFeedback(
   return { data: data as Feedback, error: null };
 }
 
-export async function deleteFeedback(id: string): Promise<QueryResult<null>> {
+/**
+ * 첨부된 과제 파일이 있으면 스토리지에서도 함께 정리한 뒤 피드백 행을 삭제합니다.
+ */
+export async function deleteFeedback(
+  id: string,
+  attachmentPath?: string | null
+): Promise<QueryResult<null>> {
+  if (attachmentPath) {
+    await supabase.storage.from(ATTACHMENTS_BUCKET).remove([attachmentPath]);
+  }
   const { error } = await supabase.from("feedbacks").delete().eq("id", id);
 
   if (error) return { data: null, error: toErrorMessage(error) };
@@ -296,17 +308,17 @@ export function computeSharedTagFrequency(cards: SharedCard[]): TagCount[] {
     .sort((a, b) => b.count - a.count);
 }
 
-// ---------- assignments ----------
+// ---------- 과제 파일 첨부 (피드백에 함께 저장) ----------
 
-const ASSIGNMENTS_BUCKET = "assignments";
+const ATTACHMENTS_BUCKET = "assignments";
 
-export async function uploadAssignmentFile(
+export async function uploadFeedbackAttachment(
   userId: string,
   file: File
 ): Promise<QueryResult<{ path: string }>> {
   const ext = file.name.includes(".") ? file.name.split(".").pop() : undefined;
   const path = `${userId}/${crypto.randomUUID()}${ext ? `.${ext}` : ""}`;
-  const { error } = await supabase.storage.from(ASSIGNMENTS_BUCKET).upload(path, file, {
+  const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, file, {
     cacheControl: "3600",
     upsert: false,
     contentType: file.type || undefined,
@@ -316,49 +328,7 @@ export async function uploadAssignmentFile(
   return { data: { path }, error: null };
 }
 
-export function getAssignmentFileUrl(path: string): string {
-  const { data } = supabase.storage.from(ASSIGNMENTS_BUCKET).getPublicUrl(path);
+export function getAttachmentUrl(path: string): string {
+  const { data } = supabase.storage.from(ATTACHMENTS_BUCKET).getPublicUrl(path);
   return data.publicUrl;
-}
-
-export async function createAssignment(input: {
-  user_id: string;
-  project_type: string;
-  title: string;
-  file_path: string;
-  file_name: string;
-  file_size: number;
-}): Promise<QueryResult<Assignment>> {
-  const { data, error } = await supabase
-    .from("assignments")
-    .insert([input])
-    .select()
-    .single();
-
-  if (error) return { data: null, error: toErrorMessage(error) };
-  return { data: data as Assignment, error: null };
-}
-
-export async function getAssignmentsByUser(
-  userId: string
-): Promise<QueryResult<Assignment[]>> {
-  const { data, error } = await supabase
-    .from("assignments")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false });
-
-  if (error) return { data: null, error: toErrorMessage(error) };
-  return { data: (data as Assignment[]) ?? [], error: null };
-}
-
-export async function deleteAssignment(
-  id: string,
-  filePath: string
-): Promise<QueryResult<null>> {
-  await supabase.storage.from(ASSIGNMENTS_BUCKET).remove([filePath]);
-  const { error } = await supabase.from("assignments").delete().eq("id", id);
-
-  if (error) return { data: null, error: toErrorMessage(error) };
-  return { data: null, error: null };
 }

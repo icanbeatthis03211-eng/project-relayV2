@@ -34,6 +34,9 @@ export interface Feedback {
   tags: string[];
   action_item: string | null;
   is_shareable: boolean;
+  attachment_path: string | null;
+  attachment_name: string | null;
+  attachment_size: number | null;
   created_at: string;
 }
 
@@ -46,17 +49,6 @@ export interface SharedCard {
   tag: string;
   tags: string[];
   action_item: string;
-  created_at: string;
-}
-
-export interface Assignment {
-  id: string;
-  user_id: string;
-  project_type: string;
-  title: string;
-  file_path: string;
-  file_name: string;
-  file_size: number | null;
   created_at: string;
 }
 

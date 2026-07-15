@@ -11,6 +11,7 @@ import { Feedback } from "@/lib/types";
 import {
   deleteFeedback,
   deleteSharedCard,
+  getAttachmentUrl,
   getFeedbacksByUser,
   getSharedCardsByFeedbackIds,
   updateFeedback,
@@ -21,6 +22,13 @@ import { PROJECT_TYPES, TAGS } from "@/lib/constants";
 function formatDate(iso: string) {
   const d = new Date(iso);
   return d.toLocaleDateString("ko-KR", { year: "numeric", month: "short", day: "numeric" });
+}
+
+function formatFileSize(bytes: number | null) {
+  if (!bytes && bytes !== 0) return "";
+  if (bytes < 1024) return `${bytes}B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
 interface EditDraft {
@@ -142,7 +150,7 @@ export default function FeedbacksPage() {
     if (!window.confirm("이 피드백을 삭제할까요? 되돌릴 수 없어요.")) return;
     setDeletingId(fb.id);
     setRowError(null);
-    const { error } = await deleteFeedback(fb.id);
+    const { error } = await deleteFeedback(fb.id, fb.attachment_path);
     setDeletingId(null);
     if (error) {
       setRowError(error);
@@ -304,6 +312,16 @@ export default function FeedbacksPage() {
                         <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
                           {fb.original_feedback}
                         </p>
+                        {fb.attachment_path && (
+                          <a
+                            href={getAttachmentUrl(fb.attachment_path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-2 inline-flex items-center gap-1.5 text-xs text-indigo-600 font-semibold hover:text-indigo-700"
+                          >
+                            📎 {fb.attachment_name} · {formatFileSize(fb.attachment_size)}
+                          </a>
+                        )}
                         <div className="mt-3 flex items-center justify-between">
                           <div className="flex gap-3">
                             <button
